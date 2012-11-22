@@ -1,0 +1,328 @@
+// aes1.cpp : main project file.
+//#include "aes.h"
+#include "stdafx.h"
+#include <iostream>
+#include "aes.h"
+using namespace std;
+using namespace System;
+
+int main(array<System::String ^> ^args)
+{
+	unsigned int round;
+	round = 0;
+	aes_i();
+	init_aes();
+	cout<<"add round key"<<endl;
+	Add_Round_Key(round);
+	show_temp();
+	for(round=0;round<9;round++)
+	{	
+		cout<<endl;
+		cout<<"--------round--------"<<endl;
+		cout<<round+1<<endl;
+		cout<<"operacja sub_bytes"<<endl;
+		sub_bytes();
+		show_temp();
+		cout<<"shift_rows"<<endl;
+		shift_rows();
+		show_temp();
+		mix_col();
+		cout<<"mix_col"<<endl;
+		show_temp();	
+		cout<<"Key schedule"<<endl;
+		Key_Schedule(round);	
+		cout<<"Show Key"<<endl;
+		Show_Key(round+1);
+		cout<<"Add_Round_Key"<<endl;
+		Add_Round_Key(round+1);
+		show_temp();	
+	}
+	round = 9;
+	cout<<" round 10"<<endl;
+	cout<<endl;
+	cout<<"sub_bytes"<<endl;
+	sub_bytes();
+	show_temp();
+	cout<<"shift_rows"<<endl;
+	shift_rows();
+	show_temp();
+	cout<<"Show Key"<<endl;
+	Key_Schedule(round);
+	Show_Key(round+1);
+	Add_Round_Key(round+1);
+	cout<<"Cipher text"<<endl;
+	cout<<endl;
+	show_temp();	
+	while(getchar())
+    return 0;
+}
+void init_aes()
+{
+	read_input();
+	cout<<"wprowadzenie danych do tablicy State"<<endl;
+	copy_to_state();
+	for(int x=0;x<row;x++)
+		{
+			for(int y=0;y<col;y++)
+				key_temp[y][x]=key[x*4+y];
+		}
+}
+void read_input()
+{	
+	int Nb = 4;
+	int N  = 4;
+struct input{
+	unsigned long input_3 :8,
+			      input_2 :8,
+				  input_1 :8,
+				  input_0 :8;					 
+};
+union {
+	unsigned long in_a;
+	input in;
+};
+for(Nb=0;Nb<col;Nb++)
+	{
+		in_a=input_d(Nb);
+		aes.input_data[0][Nb]=in.input_0;
+		aes.input_data[1][Nb]=in.input_1;
+		aes.input_data[2][Nb]=in.input_2;
+		aes.input_data[3][Nb]=in.input_3;
+	}
+}
+unsigned long input_d(int n)
+{
+	unsigned long data[]=
+	{ 0x3243f6a8,0x885a308d,0x313198a2,0xe0370734};
+	return data[n];
+}
+void copy_to_state(){
+	for(int i1=0;i1<row;i1++)
+{
+	for(int i2=0;i2<col;i2++)
+	{
+		aes.state[i1][i2]=aes.input_data[i1][i2];
+		cout<<hex<<aes.state[i1][i2]<<'\t';
+	}
+	cout<<endl;
+}
+}
+void sub_bytes()
+{
+	for(int i1=0;i1<row;i1++)
+	{
+		for(int i2=0;i2<col;i2++)
+		{
+			aes.state[i1][i2]=sub_bytes_temp(i1,i2);
+		}
+	} 
+}
+unsigned int sub_bytes_temp(int state_a,int state_b)
+{
+	struct sub{
+		unsigned int b :4,
+			     	 a :4;
+	};
+	union{
+		unsigned int byte_state;
+		sub			 a_b;
+	};
+	byte_state=aes.state[state_a][state_b];
+	return s[a_b.a*16+a_b.b];
+}
+void shift_rows()
+{
+	int r=0;
+	int c=0;
+	unsigned int sr_temp[row];
+	for(int i=1;i<row;i++)
+	{
+		
+		switch (i)
+		{
+			case 1:
+				sr_temp[0]=aes.state[i][0];
+				sr_temp[1]=aes.state[i][1];
+				sr_temp[2]=aes.state[i][2];
+				sr_temp[3]=aes.state[i][3];
+				aes.state[i][0]=sr_temp[1];
+				aes.state[i][1]=sr_temp[2];
+				aes.state[i][2]=sr_temp[3];
+				aes.state[i][3]=sr_temp[0];
+			break;
+			case 2:
+				sr_temp[0]=aes.state[i][0];
+				sr_temp[1]=aes.state[i][1];
+				sr_temp[2]=aes.state[i][2];
+				sr_temp[3]=aes.state[i][3];
+				aes.state[i][0]=sr_temp[2];
+				aes.state[i][1]=sr_temp[3];
+				aes.state[i][2]=sr_temp[0];
+				aes.state[i][3]=sr_temp[1];
+			break;
+			case 3:
+				sr_temp[0]=aes.state[i][0];
+				sr_temp[1]=aes.state[i][1];
+				sr_temp[2]=aes.state[i][2];
+				sr_temp[3]=aes.state[i][3];
+				aes.state[i][0]=sr_temp[3];
+				aes.state[i][1]=sr_temp[0];
+				aes.state[i][2]=sr_temp[1];
+				aes.state[i][3]=sr_temp[2];
+			break;
+			default:
+		    break;
+		}
+	}
+}
+void show_temp()
+{
+		for(int i1=0;i1<row;i1++)
+		{
+			for(int i2=0;i2<col;i2++)
+			{
+				cout<<aes.state[i1][i2]<<'\t';
+			}
+			cout<<endl;
+		} 
+}
+void mix_col(void)
+{
+	unsigned char mix[4];
+	unsigned char multi[4];
+	unsigned char h;
+	
+for(int c=0;c<col;c++)
+	{
+		for(int i=0;i<4;i++)
+		{
+			mix[i]=aes.state[i][c];
+			multi[i]=mix[i]<<1;
+			h=(unsigned char)( aes.state[i][c]>>7);
+			if(h==1)
+			multi[i]^=0x1b;
+		}
+		aes.state[0][c]=multi[0]^mix[3]^mix[2]^multi[1]^mix[1];
+		aes.state[1][c]=mix[0]^multi[1]^multi[2]^mix[2]^mix[3];
+		aes.state[2][c]=mix[0]^mix[1]^multi[2]^multi[3]^mix[3];
+		aes.state[3][c]=multi[0]^mix[0]^mix[1]^mix[2]^multi[3];
+	}
+
+}
+void Add_Round_Key(unsigned int round)
+{
+	for(int y=0;y<row;y++)
+	{
+		for(int x=0;x<col;x++)
+		{
+			aes.state[x][y]^=key_temp[x][y+(row*round)];
+		}
+	}
+	
+}
+void Show_Key(unsigned int round)
+{
+	for(int x=0;x<col;x++)
+	{
+		for(int y=0;y<col;y++)
+		{
+			cout<<key_temp[x][y+(col*round)]<<"\t";
+		}
+		cout<<endl;
+	}
+}
+void Key_Schedule(unsigned int r_aes)
+{
+	int y;
+	int x;
+	unsigned int key_rot[4];
+
+			for(int i=0;i<row;i++)
+			{
+				if(i<3)
+				key_rot[i]=key_temp[i+1][3+(col*r_aes)];
+				else
+				key_rot[i]=key_temp[0][3+(col*r_aes)];				
+			}		
+			Key_SubBytes(key_rot);
+			for(int i=0;i<row;i++)
+			{
+			key_temp[i][4*(r_aes+1)]=(key_temp[i][r_aes*4])^(key_rot[i])^(rcon[i][r_aes]);
+			}
+			for(int c=1+(col*r_aes);c<4+(col*r_aes);c++)
+			{
+				for(int i=0;i<row;i++)
+				{				
+					key_temp[i][4+c]=(key_temp[i][c+3])^(key_temp[i][c]);					
+				}
+			}
+}
+void show_k()
+{
+			for(int r=0;r<row;r++)
+			{
+				for(int c=0;c<8;c++)
+				{
+					cout<<key_temp[r][c]<<"\t";
+				}
+				cout<<endl;
+			}
+			cout<<endl;
+			for(int r=0;r<row;r++)
+			{
+				for(int c=8;c<16;c++)
+				{
+					cout<<key_temp[r][c]<<"\t";
+				}
+				cout<<endl;
+			}
+			cout<<endl;
+			for(int r=0;r<row;r++)
+			{
+				for(int c=16;c<24;c++)
+				{
+					cout<<key_temp[r][c]<<"\t";
+				}
+				cout<<endl;
+			}
+			cout<<endl;
+			for(int r=0;r<row;r++)
+			{
+				for(int c=24;c<32;c++)
+				{
+					cout<<key_temp[r][c]<<"\t";
+				}
+				cout<<endl;
+			}
+			cout<<endl;
+			for(int r=0;r<row;r++)
+			{
+				for(int c=32;c<40;c++)
+				{
+					cout<<key_temp[r][c]<<"\t";
+				}
+				cout<<endl;
+			}
+			cout<<endl;
+		for(int r=0;r<row;r++)
+			{
+				for(int c=40;c<44;c++)
+				{
+					cout<<key_temp[r][c]<<"\t";
+				}
+				cout<<endl;
+			}		
+}
+void Key_SubBytes(unsigned int *key)
+{
+	int key_x;
+	int key_y;
+	for(int i=0;i<row;i++)
+	{	
+		key_x=((*(key+i))&(0x0f));
+		key_y=((*(key+i))&(0xf0));
+		key_y=key_y>>4;
+		*(key+i)=s[key_y*16+key_x];
+	}	
+}
+
